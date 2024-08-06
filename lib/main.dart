@@ -11,10 +11,13 @@ import 'package:telveli/tarotpages/tarotbilgi.dart';
 import 'package:telveli/tarotpages/desta.dart';
 import 'package:telveli/falpages/turkfalokuma.dart';
 import 'package:telveli/falpages/turkfalbilgi.dart';
+import 'package:telveli/tarotpages/tarotbilgiek.dart';
 import 'package:telveli/tarotpages/tarotokuma.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
   await Firebase.initializeApp(
       options: FirebaseOptions(
     apiKey: apikeyy,
@@ -57,6 +60,11 @@ class MyApp extends StatelessWidget {
             TurkBilgiScreen(h: height, w: width, s: safearea),
         'trfalokuma': (contex) =>
             TrFalOkumaScreen(h: height, w: width, s: safearea),
+        'tarotekbilgi': (context) => TarotBilgiEkScreen(
+              h: height,
+              w: width,
+              s: safearea,
+            ),
         'tarotbilgi': (context) => TarotBilgiScreen(
               h: height,
               w: width,

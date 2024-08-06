@@ -1,5 +1,7 @@
 import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:lottie/lottie.dart';
 import 'package:telveli/home.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -11,6 +13,8 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import 'ad_helper.dart';
 
 Future<UserCredential> signInWithFacebook() async {
   // Trigger the sign-in flow
@@ -24,7 +28,7 @@ Future<UserCredential> signInWithFacebook() async {
   return FirebaseAuth.instance.signInWithCredential(facebookAuthCredential);
 }
 
-Color textcolor = Color(0xff6F4E37);
+Color textcolor = Color(0xff16345C);
 
 String errortext = "";
 double kullanimheight = 0;
@@ -75,15 +79,78 @@ class LogresPage extends StatefulWidget {
   State<LogresPage> createState() => _LogresState();
 }
 
-class _LogresState extends State<LogresPage> {
+class _LogresState extends State<LogresPage>
+    with SingleTickerProviderStateMixin {
   @override
+  late AnimationController _controller;
+
   void initState() {
+    loadBannerAd();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 30), // Animasyon süresi
+    );
+
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        // Animasyon tamamlandığında ters yönde oynat
+        _controller.reverse();
+      } else if (status == AnimationStatus.dismissed) {
+        // Animasyon geri döndüğünde tekrar başla
+        _controller.forward();
+      }
+    });
+
+    // Başlangıçta animasyonu başlat
+    _controller.forward();
+
     // TODO: implement initState
     kullanimheight = widget.h / 20;
     giriswidth = widget.w * 7 / 10;
     extraheight = widget.h / 22;
     girisheight = widget.h / 22;
     super.initState();
+  }
+
+  bool _isLoaded = false;
+  BannerAd? _bannerAd;
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    _bannerAd?.dispose();
+    _controller.dispose();
+
+    super.dispose();
+  }
+
+  void loadBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId: AdHelper.bannerAdUnitId,
+      request: const AdRequest(),
+      size: AdSize(width: widget.w.toInt(), height: (widget.h / 10.3).toInt()),
+      listener: BannerAdListener(
+        // Called when an ad is successfully received.
+        onAdLoaded: (ad) {
+          debugPrint('$ad loaded.');
+          setState(() {
+            _isLoaded = true;
+          });
+        },
+        // Called when an ad request failed.
+        onAdFailedToLoad: (ad, err) {
+          debugPrint('BannerAd failed to load: $err');
+          // Dispose the ad here to free resources.
+          ad.dispose();
+        },
+        // Called when an ad opens an overlay that covers the screen.
+        onAdOpened: (Ad ad) {},
+        // Called when an ad removes an overlay that covers the screen.
+        onAdClosed: (Ad ad) {},
+        // Called when an impression occurs on the ad.
+        onAdImpression: (Ad ad) {},
+      ),
+    )..load();
   }
 
   final _firestore = FirebaseFirestore.instance;
@@ -99,371 +166,436 @@ class _LogresState extends State<LogresPage> {
       body: ModalProgressHUD(
         inAsyncCall: showSpinner,
         child: Container(
-          width: width,
           height: height,
-          color: Color(0xffB67233),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
+          width: width,
+          child: Stack(
             children: [
-              Spacer(),
               Container(
-                width: width * 7 / 10,
-                child: Image.asset("images/82.png"),
-              ),
-              Text(
-                errortext,
-                style: TextStyle(
-                  color: Colors.white,
-                  decorationColor: Colors.white,
-                ),
-              ),
-              loginField(
-                color: textcolor,
-                func: (v) {
-                  setState(() {
-                    ad = v;
-                    if (ad == "") {
-                      errortext = "";
-                      textcolor = Color(0xff6F4E37);
-                    }
-                  });
-                },
-                heigh: adsoyadheight,
-                width: width, //width
-                text: "Ad Soyad",
-              ),
-              loginField(
-                  color: textcolor,
-                  func: (v) {
-                    setState(() {
-                      email = v;
-                      if (email == "") {
-                        errortext = "";
-                        textcolor = Color(0xff6F4E37);
-                      }
-                    });
-                  },
-                  heigh: height / 19,
-                  width: width,
-                  text: "E-Mail"),
-              loginField(
-                  color: textcolor,
-                  func: (v) {
-                    setState(() {
-                      password = v;
-                      if (password == "") {
-                        errortext = "";
-                        textcolor = Color(0xff6F4E37);
-                      }
-                    });
-                  },
-                  heigh: height / 19,
-                  width: width,
-                  text: "Şifre"),
-              loginField(
-                color: textcolor,
-                func: (v) {
-                  setState(() {
-                    passwordtekrar = v;
-                    if (passwordtekrar == "") {
-                      errortext = "";
-                      textcolor = Color(0xff6F4E37);
-                    }
-                  });
-                },
-                heigh: sifretekrarheight,
                 width: width,
-                text: "Şifre Tekrar",
-              ),
-              loginbutton(
-                c: Colors.white,
-                func: () async {
-                  if (sayfa == "g") {
-                    setState(() {
-                      showSpinner = true;
-                    });
-                    try {
-                      final au = await _auth.signInWithEmailAndPassword(
-                          email: email, password: password);
-                      if (au != null) {
-                        Navigator.pushNamed(context, 'home');
-                      }
-                      setState(() {
-                        showSpinner = false;
-                      });
-                    } catch (e) {
-                      setState(() {
-                        errortext = "Hatalı E-Mail ya da Şifre.";
-                        textcolor = Colors.red;
-                      });
-                      print(e);
-                      setState(() {
-                        showSpinner = false;
-                      });
-                    }
-                  }
-                },
-                heigh: girisheight,
-                width: giriswidth,
-                text: gtext,
-                marg: 20,
-                tc: Color(0xff6F4E37),
-              ),
-              loginbutton(
-                c: kayitcolor,
-                func: () async {
-                  if (sayfa == "k") {
-                    if (passwordtekrar == password) {
-                      setState(() {
-                        showSpinner = true;
-                      });
-                      try {
-                        final newUser =
-                            await _auth.createUserWithEmailAndPassword(
-                                email: email, password: password);
-
-                        if (newUser != null) {
-                          await _firestore.collection('bilgiler').add({
-                            "ad": ad,
-                            "mail": email,
-                            "coin": 0,
-                            "aktiffaltarih": "",
-                            "aktifkahvefalı": "yok",
-                            "toplambakılanfal": 0
-                          });
-                          setState(() {
-                            showSpinner = false;
-                          });
-                          Navigator.pushNamed(context, "home");
-                        }
-                        setState(() {
-                          showSpinner = false;
-                        });
-                      } catch (e) {
-                        setState(() {
-                          errortext = "Hatalı, Eksik ya da Kayıtlı E-Mail.";
-                          textcolor = Colors.red;
-                        });
-                        setState(() {
-                          showSpinner = false;
-                        });
-                        print(e);
-                      }
-                    } else {
-                      setState(() {
-                        errortext = "Şifreler birbiriyle uyuşmuyor.";
-                        textcolor = Colors.red;
-                      });
-                    }
-                  }
-                  setState(() {
-                    if (sayfa == "g") {
-                      setState(() {
-                        errortext = "";
-                        textcolor = Color(0xff6F4E37);
-                      });
-                      sayfa = "k";
-                      extraheight = 0;
-                      kullanimheight = 0;
-                      geridonheight = height / 25;
-                      girisheight = 0;
-                      sifretekrarheight = height / 19;
-                      adsoyadheight = height / 19;
-                    }
-                  });
-                },
-                heigh: height / 22,
-                width: width * 7 / 10,
-                text: "KAYIT OL",
-                marg: 10,
-                tc: Color(0xff6F4E37),
-              ),
-              AnimatedContainer(
-                duration: Duration(milliseconds: 800),
-                margin: EdgeInsets.only(top: 10),
-                height: geridonheight,
-                width: width * 3 / 10,
+                height: height,
+                child: RotatedBox(
+                    quarterTurns: 1,
+                    child: Lottie.asset(
+                      'assets/star.json',
+                      controller: _controller,
+                      onLoaded: (composition) {
+                        _controller.duration = composition.duration;
+                      },
+                    )),
                 decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(20)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black54,
-                        blurRadius: 6,
-                        offset: Offset(3, 4), // Shadow position
-                      ),
-                    ]),
-                child: TextButton(
-                  style: ButtonStyle(
-                    shape: WidgetStateProperty.all(RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.0))),
-                    backgroundColor: WidgetStateProperty.all(kayitcolor),
-                  ),
-                  onPressed: () {
-                    if (sayfa == "k") {
-                      setState(() {
-                        setState(() {
-                          errortext = "";
-                          textcolor = Color(0xff6F4E37);
-                        });
-                        kullanimheight = height / 20;
-                        extraheight = height / 22;
-                        sayfa = "g";
-                        geridonheight = 0;
-                        girisheight = height / 22;
-                        sifretekrarheight = 0;
-                        adsoyadheight = 0;
-                      });
-                    }
-                  },
-                  child: Text(
-                    "Girişe Geri Dön",
-                    style: TextStyle(
-                        color: Color(0xff6F4E37), fontSize: geridonheight / 3),
-                  ),
-                ),
-              ),
-              loginbuttonclas(
-                  tc: Colors.white,
-                  func: () async {
-                    if (sayfa == "g") {
-                      setState(() {
-                        showSpinner = true;
-                      });
-                      try {
-                        final newUser = await signInWithGoogle();
-                        if (true) {
-                          var key = false;
-                          var mmail = newUser.user!.email;
-                          var nname = (newUser.user!.displayName);
-                          await _firestore
-                              .collection("bilgiler")
-                              .get()
-                              .then((event) {
-                            for (var doc in event.docs) {
-                              if (doc.data()["mail"] == mmail) {
-                                key = true;
-                              }
-                            }
-                          });
-                          if (!key) {
-                            await _firestore.collection('bilgiler').add({
-                              "ad": nname,
-                              "mail": mmail,
-                              "coin": 0,
-                              "aktiffaltarih": "",
-                              "aktifkahvefalı": "yok",
-                              "toplambakılanfal": 0
-                            });
-                            setState(() {
-                              showSpinner = false;
-                            });
-                            if (newUser != null) {
-                              Navigator.pushNamed(context, "home");
-                            }
-                          } else {
-                            setState(() {
-                              showSpinner = false;
-                            });
-                            if (newUser != null) {
-                              Navigator.pushNamed(context, "home");
-                            }
-                          }
-                        }
-                      } catch (e) {
-                        setState(() {
-                          showSpinner = false;
-                        });
-                        print(e);
-                      }
-                    }
-                  },
-                  im: "google",
-                  marg: 30,
-                  text: "Sign in with Google",
-                  heigh: extraheight,
-                  width: width * 6 / 10,
-                  c: Colors.red),
-              loginbuttonclas(
-                  tc: Colors.white,
-                  func: () async {
-                    if (sayfa == "g") {
-                      setState(() {
-                        showSpinner = true;
-                      });
-                      try {
-                        final newUser = await signInWithFacebook();
+                    gradient: LinearGradient(
+                  colors: [
+                    Color(0xff16345C),
+                    Color(0xFF2F4D76),
 
-                        if (true) {
-                          var key = false;
-                          var mmail = newUser.user!.email;
-                          var nname = (newUser.user!.displayName);
-                          await _firestore
-                              .collection("bilgiler")
-                              .get()
-                              .then((event) {
-                            for (var doc in event.docs) {
-                              if (doc.data()["mail"] == mmail) {
-                                key = true;
-                              }
-                            }
-                          });
-                          if (!key) {
-                            await _firestore.collection('bilgiler').add({
-                              "ad": nname,
-                              "mail": mmail,
-                              "coin": 0,
-                              "aktiffaltarih": "",
-                              "aktifkahvefalı": "yok",
-                              "toplambakılanfal": 0
-                            });
-                            setState(() {
-                              showSpinner = false;
-                            });
-                            if (newUser != null) {
-                              Navigator.pushNamed(context, "home");
-                            }
-                          } else {
-                            setState(() {
-                              showSpinner = false;
-                            });
-                            if (newUser != null) {
-                              Navigator.pushNamed(context, "home");
-                            }
-                          }
-                        }
-                      } catch (e) {
-                        setState(() {
-                          showSpinner = false;
-                        });
-                        print(e);
-                      }
-                    }
-                  },
-                  marg: 10,
-                  im: "facebook",
-                  text: "Sign in with Facebook",
-                  heigh: extraheight,
-                  width: width * 6 / 10,
-                  c: Colors.blueAccent),
-              Spacer(),
+                    Color(0xFF3A4A9B),
+                    Color(0xFF3A4D9B),
+                    Color(0xff282a8c),
+
+                    // Kahverengiye benzeyen Saddle Brown
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )),
+              ),
               Container(
                 width: width,
-                height: height / 20,
-                child: TextButton(
-                    onPressed: () {
-                      var url = Uri.parse(
-                          "https://www.privacypolicies.com/live/8b8ad254-8730-45af-99a8-43f2b685b085");
-                      launchUrl(url);
-                    },
-                    child: Text(
-                      "Kullanım Koşulları ve Gizlilik Politikası",
+                height: height,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Spacer(),
+                    Container(
+                      width: width * 7 / 10,
+                      height: (width * 7 / 10) * 2488 / 3264,
+                      child: Stack(
+                        children: [
+                          Positioned(
+                              left: 2,
+                              top: 2,
+                              child: Container(
+                                  width: width * 7 / 10,
+                                  height: (width * 7 / 10) * 2488 / 3264,
+                                  child: Image.asset(
+                                    "images/sb.png",
+                                    color: Colors.black54,
+                                  ))),
+                          Positioned(
+                              child: Container(
+                                  width: width * 7 / 10,
+                                  height: (width * 7 / 10) * 2488 / 3264,
+                                  child: Image.asset("images/ss.png")))
+                        ],
+                      ),
+                    ),
+                    Text(
+                      errortext,
                       style: TextStyle(
                         color: Colors.white,
                         decorationColor: Colors.white,
-                        decoration: TextDecoration.underline,
                       ),
-                    )),
+                    ),
+                    loginField(
+                      color: textcolor,
+                      func: (v) {
+                        setState(() {
+                          ad = v;
+                          if (ad == "") {
+                            errortext = "";
+                            textcolor = Color(0xff16345C);
+                          }
+                        });
+                      },
+                      heigh: adsoyadheight,
+                      width: width, //width
+                      text: "Ad Soyad",
+                    ),
+                    loginField(
+                        color: textcolor,
+                        func: (v) {
+                          setState(() {
+                            email = v;
+                            if (email == "") {
+                              errortext = "";
+                              textcolor = Color(0xff16345C);
+                            }
+                          });
+                        },
+                        heigh: height / 19,
+                        width: width,
+                        text: "E-Mail"),
+                    loginField(
+                        color: textcolor,
+                        func: (v) {
+                          setState(() {
+                            password = v;
+                            if (password == "") {
+                              errortext = "";
+                              textcolor = Color(0xff16345C);
+                            }
+                          });
+                        },
+                        heigh: height / 19,
+                        width: width,
+                        text: "Şifre"),
+                    loginField(
+                      color: textcolor,
+                      func: (v) {
+                        setState(() {
+                          passwordtekrar = v;
+                          if (passwordtekrar == "") {
+                            errortext = "";
+                            textcolor = Color(0xff16345C);
+                          }
+                        });
+                      },
+                      heigh: sifretekrarheight,
+                      width: width,
+                      text: "Şifre Tekrar",
+                    ),
+                    loginbutton(
+                      c: Colors.white,
+                      func: () async {
+                        if (sayfa == "g") {
+                          setState(() {
+                            showSpinner = true;
+                          });
+                          try {
+                            final au = await _auth.signInWithEmailAndPassword(
+                                email: email, password: password);
+                            if (au != null) {
+                              Navigator.pushNamed(context, 'home');
+                            }
+                            setState(() {
+                              showSpinner = false;
+                            });
+                          } catch (e) {
+                            setState(() {
+                              errortext = "Hatalı E-Mail ya da Şifre.";
+                              textcolor = Colors.red;
+                            });
+                            print(e);
+                            setState(() {
+                              showSpinner = false;
+                            });
+                          }
+                        }
+                      },
+                      heigh: girisheight,
+                      width: giriswidth,
+                      text: gtext,
+                      marg: 20,
+                      tc: Color(0xff16345C),
+                    ),
+                    loginbutton(
+                      c: kayitcolor,
+                      func: () async {
+                        if (sayfa == "k") {
+                          if (passwordtekrar == password) {
+                            setState(() {
+                              showSpinner = true;
+                            });
+                            try {
+                              final newUser =
+                                  await _auth.createUserWithEmailAndPassword(
+                                      email: email, password: password);
+
+                              if (newUser != null) {
+                                await _firestore.collection('bilgiler').add({
+                                  "ad": ad,
+                                  "mail": email,
+                                  "coin": 0,
+                                  "aktiffaltarih": "",
+                                  "aktifkahvefalı": "yok",
+                                  "toplambakılanfal": 0
+                                });
+                                setState(() {
+                                  showSpinner = false;
+                                });
+                                Navigator.pushNamed(context, "home");
+                              }
+                              setState(() {
+                                showSpinner = false;
+                              });
+                            } catch (e) {
+                              setState(() {
+                                errortext =
+                                    "Hatalı, Eksik ya da Kayıtlı E-Mail.";
+                                textcolor = Colors.red;
+                              });
+                              setState(() {
+                                showSpinner = false;
+                              });
+                              print(e);
+                            }
+                          } else {
+                            setState(() {
+                              errortext = "Şifreler birbiriyle uyuşmuyor.";
+                              textcolor = Colors.red;
+                            });
+                          }
+                        }
+                        setState(() {
+                          if (sayfa == "g") {
+                            setState(() {
+                              errortext = "";
+                              textcolor = Color(0xff16345C);
+                            });
+                            sayfa = "k";
+                            extraheight = 0;
+                            kullanimheight = 0;
+                            geridonheight = height / 25;
+                            girisheight = 0;
+                            sifretekrarheight = height / 19;
+                            adsoyadheight = height / 19;
+                          }
+                        });
+                      },
+                      heigh: height / 22,
+                      width: width * 7 / 10,
+                      text: "KAYIT OL",
+                      marg: 10,
+                      tc: Color(0xff16345C),
+                    ),
+                    AnimatedContainer(
+                      duration: Duration(milliseconds: 800),
+                      margin: EdgeInsets.only(top: 10),
+                      height: geridonheight,
+                      width: width * 3 / 10,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black54,
+                              blurRadius: 6,
+                              offset: Offset(3, 4), // Shadow position
+                            ),
+                          ]),
+                      child: TextButton(
+                        style: ButtonStyle(
+                          shape: WidgetStateProperty.all(RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20.0))),
+                          backgroundColor: WidgetStateProperty.all(kayitcolor),
+                        ),
+                        onPressed: () {
+                          if (sayfa == "k") {
+                            setState(() {
+                              setState(() {
+                                errortext = "";
+                                textcolor = Color(0xff16345C);
+                              });
+                              kullanimheight = height / 20;
+                              extraheight = height / 22;
+                              sayfa = "g";
+                              geridonheight = 0;
+                              girisheight = height / 22;
+                              sifretekrarheight = 0;
+                              adsoyadheight = 0;
+                            });
+                          }
+                        },
+                        child: Text(
+                          "Girişe Geri Dön",
+                          style: TextStyle(
+                              color: Color(0xff16345C),
+                              fontSize: geridonheight / 3),
+                        ),
+                      ),
+                    ),
+                    loginbuttonclas(
+                        tc: Colors.white,
+                        func: () async {
+                          if (sayfa == "g") {
+                            setState(() {
+                              showSpinner = true;
+                            });
+                            try {
+                              final newUser = await signInWithGoogle();
+                              if (true) {
+                                var key = false;
+                                var mmail = newUser.user!.email;
+                                var nname = (newUser.user!.displayName);
+                                await _firestore
+                                    .collection("bilgiler")
+                                    .get()
+                                    .then((event) {
+                                  for (var doc in event.docs) {
+                                    if (doc.data()["mail"] == mmail) {
+                                      key = true;
+                                    }
+                                  }
+                                });
+                                if (!key) {
+                                  await _firestore.collection('bilgiler').add({
+                                    "ad": nname,
+                                    "mail": mmail,
+                                    "coin": 0,
+                                    "aktiffaltarih": "",
+                                    "aktifkahvefalı": "yok",
+                                    "toplambakılanfal": 0
+                                  });
+                                  setState(() {
+                                    showSpinner = false;
+                                  });
+                                  if (newUser != null) {
+                                    Navigator.pushNamed(context, "home");
+                                  }
+                                } else {
+                                  setState(() {
+                                    showSpinner = false;
+                                  });
+                                  if (newUser != null) {
+                                    Navigator.pushNamed(context, "home");
+                                  }
+                                }
+                              }
+                            } catch (e) {
+                              setState(() {
+                                showSpinner = false;
+                              });
+                              print(e);
+                            }
+                          }
+                        },
+                        im: "google",
+                        marg: 30,
+                        text: "Sign in with Google",
+                        heigh: extraheight,
+                        width: width * 6 / 10,
+                        c: Colors.red),
+                    loginbuttonclas(
+                        tc: Colors.white,
+                        func: () async {
+                          if (sayfa == "g") {
+                            setState(() {
+                              showSpinner = true;
+                            });
+                            try {
+                              final newUser = await signInWithFacebook();
+
+                              if (true) {
+                                var key = false;
+                                var mmail = newUser.user!.email;
+                                var nname = (newUser.user!.displayName);
+                                await _firestore
+                                    .collection("bilgiler")
+                                    .get()
+                                    .then((event) {
+                                  for (var doc in event.docs) {
+                                    if (doc.data()["mail"] == mmail) {
+                                      key = true;
+                                    }
+                                  }
+                                });
+                                if (!key) {
+                                  await _firestore.collection('bilgiler').add({
+                                    "ad": nname,
+                                    "mail": mmail,
+                                    "coin": 0,
+                                    "aktiffaltarih": "",
+                                    "aktifkahvefalı": "yok",
+                                    "toplambakılanfal": 0
+                                  });
+                                  setState(() {
+                                    showSpinner = false;
+                                  });
+                                  if (newUser != null) {
+                                    Navigator.pushNamed(context, "home");
+                                  }
+                                } else {
+                                  setState(() {
+                                    showSpinner = false;
+                                  });
+                                  if (newUser != null) {
+                                    Navigator.pushNamed(context, "home");
+                                  }
+                                }
+                              }
+                            } catch (e) {
+                              setState(() {
+                                showSpinner = false;
+                              });
+                              print(e);
+                            }
+                          }
+                        },
+                        marg: 10,
+                        im: "facebook",
+                        text: "Sign in with Facebook",
+                        heigh: extraheight,
+                        width: width * 6 / 10,
+                        c: Colors.blueAccent),
+                    Spacer(),
+                    Container(
+                      margin: EdgeInsets.only(bottom: 0),
+                      child: Text(
+                        "Made by Açelya & Yiğit",
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: width,
+                      height: height / 20,
+                      child: TextButton(
+                          onPressed: () {
+                            var url = Uri.parse(
+                                "https://www.privacypolicies.com/live/8b8ad254-8730-45af-99a8-43f2b685b085");
+                            launchUrl(url);
+                          },
+                          child: Text(
+                            "Kullanım Koşulları ve Gizlilik Politikası",
+                            style: TextStyle(
+                              color: Colors.white,
+                              decorationColor: Colors.white,
+                              decoration: TextDecoration.underline,
+                            ),
+                          )),
+                    )
+                  ],
+                ),
               )
             ],
           ),
@@ -556,7 +688,7 @@ class loginField extends StatelessWidget {
               offset: Offset(3, 4), // Shadow position
             ),
           ]),
-      width: width * 8 / 10,
+      width: (heigh != 0) ? width * 8 / 10 : 0,
       child: TextField(
         autofocus: false,
         onChanged: (value) {
@@ -576,16 +708,16 @@ class loginField extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: Color(0xffB67233), width: 0.0),
+            borderSide: BorderSide(color: Color(0xff16345C), width: 0.0),
           ),
           disabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Color(0xffB67233), width: 0.0),
+              borderSide: BorderSide(color: Color(0xff16345C), width: 0.0),
               borderRadius: BorderRadius.circular(20)),
           enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Color(0xffB67233), width: 0.0),
+              borderSide: BorderSide(color: Color(0xff16345C), width: 0.0),
               borderRadius: BorderRadius.circular(20)),
           border: OutlineInputBorder(
-            borderSide: BorderSide(color: Color(0xffB67233), width: 0.0),
+            borderSide: BorderSide(color: Color(0xff16345C), width: 0.0),
             borderRadius: BorderRadius.circular(20),
           ),
         ),

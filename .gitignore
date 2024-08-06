@@ -46,3 +46,4 @@ app.*.map.json
 /android/app/google-servies.json
 android/app/google-servies.json
 cred.dart
+ad_helper.dart

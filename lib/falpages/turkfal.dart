@@ -7,10 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'dart:ui';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:telveli/ad_helper.dart';
 
 String faltext = "senisevom";
 String text = "";
@@ -20,6 +22,8 @@ File? path2;
 File? path3;
 File? path4;
 var list = [];
+
+Color primary = Color(0xffE38A43);
 
 class TurkfalScreen extends StatefulWidget {
   const TurkfalScreen(
@@ -43,8 +47,47 @@ class _TurkfalScreenState extends State<TurkfalScreen> {
   @override
   void initState() {
     // TODO: implement initState
-
+    loadBannerAd();
     super.initState();
+  }
+
+  bool _isLoaded = false;
+  BannerAd? _bannerAd;
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    _bannerAd?.dispose();
+    super.dispose();
+  }
+
+  void loadBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId: AdHelper.bannerAdUnitId,
+      request: const AdRequest(),
+      size: AdSize(width: widget.w.toInt(), height: (widget.h / 10.3).toInt()),
+      listener: BannerAdListener(
+        // Called when an ad is successfully received.
+        onAdLoaded: (ad) {
+          debugPrint('$ad loaded.');
+          setState(() {
+            _isLoaded = true;
+          });
+        },
+        // Called when an ad request failed.
+        onAdFailedToLoad: (ad, err) {
+          debugPrint('BannerAd failed to load: $err');
+          // Dispose the ad here to free resources.
+          ad.dispose();
+        },
+        // Called when an ad opens an overlay that covers the screen.
+        onAdOpened: (Ad ad) {},
+        // Called when an ad removes an overlay that covers the screen.
+        onAdClosed: (Ad ad) {},
+        // Called when an impression occurs on the ad.
+        onAdImpression: (Ad ad) {},
+      ),
+    )..load();
   }
 
   void didChangeDependencies() {
@@ -92,93 +135,115 @@ class _TurkfalScreenState extends State<TurkfalScreen> {
       body: Container(
         width: widget.w,
         height: widget.h,
-        color: Color(0xffB67233),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xffD2691E),
+              Color(0xffcc8052),
+              Color(0xffe19c7b),
+              Color(0xffe19c7b),
+              Color(0xffe19c7b),
+              Color(0xffde9870),
+              Color(0xffcc8052),
+              Color(0xffD2691E),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
         child: Column(
           children: [
             Container(
               width: widget.w,
-              height: widget.h * 6 / 48,
-              color: const Color(0xff6F4E37),
-              child: Container(
-                child: Column(
-                  children: [
-                    Container(
-                      width: widget.w,
-                      height: widget.s,
+              height: widget.s,
+            ),
+            Container(
+              width: widget.w,
+              height: widget.h * 4 / 48,
+              decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xff8a674c),
+                      Color(0xff946b4e),
+                      Color(0xff886248),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black54,
+                      blurRadius: 6,
+                      offset: Offset(0, 4), // Shadow position
                     ),
-                    Container(
-                      width: widget.w,
-                      height: (widget.h * 6 / 48) - widget.s,
-                      child: Stack(
-                        alignment: Alignment.center,
+                  ]),
+              child: Container(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Positioned(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Positioned(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pushNamed(context, "trfalbilgi",
-                                        arguments: args);
-                                  },
-                                  child: Container(
-                                    margin:
-                                        EdgeInsets.only(left: widget.w / 15),
-                                    child: Stack(
-                                      children: [
-                                        Positioned(
-                                            left: 1,
-                                            top: 3,
-                                            child: Iconify(
-                                                '<svg xmlns="http://www.w3.org/2000/svg" width="0.5em" height="1em" viewBox="0 0 12 24"><path fill="currentColor" fill-rule="evenodd" d="m3.343 12l7.071 7.071L9 20.485l-7.778-7.778a1 1 0 0 1 0-1.414L9 3.515l1.414 1.414z"/></svg>',
-                                                size: widget.h / 20,
-                                                color: Colors.black)),
-                                        Iconify(
-                                            '<svg xmlns="http://www.w3.org/2000/svg" width="0.5em" height="1em" viewBox="0 0 12 24"><path fill="currentColor" fill-rule="evenodd" d="m3.343 12l7.071 7.071L9 20.485l-7.778-7.778a1 1 0 0 1 0-1.414L9 3.515l1.414 1.414z"/></svg>',
-                                            size: widget.h / 20,
-                                            color: Colors.white)
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                Spacer(),
-                              ],
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pushNamed(context, "trfalbilgi",
+                                  arguments: {"authdocc": args["authdocc"]});
+                            },
+                            child: Container(
+                              margin: EdgeInsets.only(left: widget.w / 15),
+                              child: Stack(
+                                children: [
+                                  Positioned(
+                                      left: 1,
+                                      top: 2,
+                                      child: Iconify(
+                                          '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="black" d="M20 11H7.83l5.59-5.59L12 4l-8 8l8 8l1.41-1.41L7.83 13H20z"/></svg>',
+                                          size: widget.h / 20,
+                                          color: Colors.black)),
+                                  Iconify(
+                                      '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="black" d="M20 11H7.83l5.59-5.59L12 4l-8 8l8 8l1.41-1.41L7.83 13H20z"/></svg>',
+                                      size: widget.h / 20,
+                                      color: Colors.white)
+                                ],
+                              ),
                             ),
                           ),
-                          Positioned(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Container(
-                                  margin: EdgeInsets.only(
-                                    top: widget.h * 1.2 / 96,
-                                  ),
-                                  child: Text(
-                                    "Telveli",
-                                    style: TextStyle(
-                                      fontFamily: "xd",
-                                      fontSize: widget.h * 5 / 96,
-                                      color: Colors.white,
-                                      shadows: const <Shadow>[
-                                        Shadow(
-                                          offset: Offset(3.0, 3.0),
-                                          blurRadius: 3.0,
-                                          color: Colors.black54,
-                                        ),
-                                        Shadow(
-                                          offset: Offset(3.0, 3.0),
-                                          blurRadius: 8.0,
-                                          color: Colors.black54,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
+                          Spacer(),
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            margin: EdgeInsets.only(
+                              top: widget.h * 1.2 / 96,
                             ),
-                          )
+                            child: Text(
+                              "Telveli",
+                              style: TextStyle(
+                                fontSize: widget.h * 5 / 96,
+                                fontFamily: "xd",
+                                color: Colors.white,
+                                shadows: const <Shadow>[
+                                  Shadow(
+                                    offset: Offset(3.0, 3.0),
+                                    blurRadius: 3.0,
+                                    color: Colors.black54,
+                                  ),
+                                  Shadow(
+                                    offset: Offset(3.0, 3.0),
+                                    blurRadius: 8.0,
+                                    color: Colors.black54,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     )
@@ -188,7 +253,7 @@ class _TurkfalScreenState extends State<TurkfalScreen> {
             ),
             Container(
               width: widget.w,
-              height: widget.h * 42 / 48,
+              height: widget.h - (widget.s) - (widget.h * 4 / 48),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -282,7 +347,7 @@ class _TurkfalScreenState extends State<TurkfalScreen> {
                     ),
                   ),
                   Container(
-                    margin: EdgeInsets.only(top: widget.h / 20),
+                    margin: EdgeInsets.only(top: widget.h / 40),
                     child: Text(
                         style: TextStyle(
                           fontSize: widget.h * 0.9 / 48,
@@ -373,7 +438,9 @@ class _TurkfalScreenState extends State<TurkfalScreen> {
                         backgroundColor: WidgetStateProperty.all(Colors.white),
                       ),
                       onPressed: () async {
+                        list.removeWhere((v) => v == null);
                         if (list.length > 0) {
+                          print("here");
                           var lastpath = list[0];
                           final ref = await storageRef.child(usermail +
                               "/" +
@@ -391,7 +458,7 @@ class _TurkfalScreenState extends State<TurkfalScreen> {
                             try {
                               await _firestore
                                   .collection('generate')
-                                  .add({"image": adres}).then(
+                                  .add({"image": adres, "isim": username}).then(
                                       (DocumentReference doc) =>
                                           docid = doc.id);
                               DateTime now = DateTime.now();
@@ -430,9 +497,13 @@ class _TurkfalScreenState extends State<TurkfalScreen> {
                     margin: EdgeInsets.only(top: widget.h / 20),
                     width: widget.w,
                     height: widget.h / 10,
-                    color: Colors.white,
                     alignment: Alignment.center,
-                    child: Text("reklam"),
+                    child: (_bannerAd != null)
+                        ? Container(
+                            width: _bannerAd!.size.width.toDouble(),
+                            height: _bannerAd!.size.height.toDouble(),
+                            child: AdWidget(ad: _bannerAd!))
+                        : null,
                   ),
                   Spacer(),
                 ],

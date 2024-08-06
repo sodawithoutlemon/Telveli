@@ -11,18 +11,22 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'dart:ui';
 import 'package:image_picker/image_picker.dart';
-import 'package:lottie/lottie.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:telveli/ad_helper.dart';
+import 'package:telveli/home.dart';
 
 String faltext = "senisevom";
 String text = "";
 String docid = "";
 double datetop = 0;
+String cinsiyet = "Cinsiyet";
+String calismaDurumu = "Çalışma Durumu";
+String iliskiDurumu = "İlişki Durumu";
+Color primary = Color(0xffE38A43);
 
-class TurkBilgiScreen extends StatefulWidget {
-  const TurkBilgiScreen(
+class TarotBilgiEkScreen extends StatefulWidget {
+  const TarotBilgiEkScreen(
       {super.key, required this.h, required this.w, required this.s});
 
   final double s;
@@ -30,10 +34,8 @@ class TurkBilgiScreen extends StatefulWidget {
   final double w;
 
   @override
-  _TurkBilgiScreenState createState() => _TurkBilgiScreenState();
+  _TarotBilgiEkScreenState createState() => _TarotBilgiEkScreenState();
 }
-
-Color primary = Color(0xffE38A43);
 
 String username = "Ad Soyad";
 String usermail = "";
@@ -41,30 +43,23 @@ String userdate = "Doğum Tarihi";
 
 late var args;
 
-class _TurkBilgiScreenState extends State<TurkBilgiScreen> {
+class _TarotBilgiEkScreenState extends State<TarotBilgiEkScreen> {
   @override
   void initState() {
+    loadBannerAd();
     datetop = widget.h * 3 - (widget.h / 2.5);
     // TODO: implement initState
-    loadBannerAd();
+
     super.initState();
   }
 
   bool _isLoaded = false;
   BannerAd? _bannerAd;
-
-  @override
-  void dispose() {
-    // TODO: implement dispose
-    _bannerAd?.dispose();
-    super.dispose();
-  }
-
   void loadBannerAd() {
     _bannerAd = BannerAd(
       adUnitId: AdHelper.bannerAdUnitId,
       request: const AdRequest(),
-      size: AdSize(width: widget.w.toInt(), height: (widget.h / 10.3).toInt()),
+      size: AdSize(width: widget.w.toInt(), height: (widget.h / 5.5).toInt()),
       listener: BannerAdListener(
         // Called when an ad is successfully received.
         onAdLoaded: (ad) {
@@ -87,6 +82,12 @@ class _TurkBilgiScreenState extends State<TurkBilgiScreen> {
         onAdImpression: (Ad ad) {},
       ),
     )..load();
+  }
+
+  void dispose() {
+    // TODO: implement dispose
+    _bannerAd?.dispose();
+    super.dispose();
   }
 
   void didChangeDependencies() {
@@ -112,39 +113,18 @@ class _TurkBilgiScreenState extends State<TurkBilgiScreen> {
             child: Container(
               width: widget.w,
               height: widget.h,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xffD2691E),
-                    Color(0xffcc8052),
-                    Color(0xffe19c7b),
-                    Color(0xffe19c7b),
-                    Color(0xffe19c7b),
-                    Color(0xffde9870),
-                    Color(0xffcc8052),
-                    Color(0xffD2691E),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
+              color: primary,
               child: Column(
                 children: [
-                  Container(width: widget.w, height: widget.s),
                   Container(
                     width: widget.w,
-                    height: widget.h * 4 / 48,
+                    height: widget.s,
+                  ),
+                  Container(
+                    width: widget.w,
+                    height: (widget.h * 4 / 48),
                     decoration: const BoxDecoration(
-                        //Color(0xff6F4E37) herher
-                        gradient: LinearGradient(
-                          colors: [
-                            Color(0xff8a674c),
-                            Color(0xff946b4e),
-                            Color(0xff886248),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                        color: const Color(0xff6F4E37),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black54,
@@ -152,93 +132,90 @@ class _TurkBilgiScreenState extends State<TurkBilgiScreen> {
                             offset: Offset(0, 4), // Shadow position
                           ),
                         ]),
-                    child: Container(
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Positioned(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pushNamed(context, "home");
-                                  },
-                                  child: Container(
-                                    margin:
-                                        EdgeInsets.only(left: widget.w / 15),
-                                    child: Stack(
-                                      children: [
-                                        Positioned(
-                                            left: 1,
-                                            top: 2,
-                                            child: Iconify(
-                                                '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="black" d="M20 11H7.83l5.59-5.59L12 4l-8 8l8 8l1.41-1.41L7.83 13H20z"/></svg>',
-                                                size: widget.h / 20,
-                                                color: Colors.black)),
-                                        Iconify(
-                                            '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="black" d="M20 11H7.83l5.59-5.59L12 4l-8 8l8 8l1.41-1.41L7.83 13H20z"/></svg>',
-                                            size: widget.h / 20,
-                                            color: Colors.white)
-                                      ],
-                                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Positioned(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pushNamed(context, "home");
+                                },
+                                child: Container(
+                                  margin: EdgeInsets.only(left: widget.w / 15),
+                                  child: Stack(
+                                    children: [
+                                      Positioned(
+                                          left: 1,
+                                          top: 3,
+                                          child: Iconify(
+                                              '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="black" d="M20 11H7.83l5.59-5.59L12 4l-8 8l8 8l1.41-1.41L7.83 13H20z"/></svg>',
+                                              size: widget.h / 20,
+                                              color: Colors.black)),
+                                      Iconify(
+                                          '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="black" d="M20 11H7.83l5.59-5.59L12 4l-8 8l8 8l1.41-1.41L7.83 13H20z"/></svg>',
+                                          size: widget.h / 20,
+                                          color: Colors.white)
+                                    ],
                                   ),
                                 ),
-                                Spacer(),
-                              ],
-                            ),
+                              ),
+                              Spacer(),
+                            ],
                           ),
-                          Positioned(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Container(
-                                  margin: EdgeInsets.only(
-                                    top: widget.h * 1.2 / 96,
-                                  ),
-                                  child: Text(
-                                    "Telveli",
-                                    style: TextStyle(
-                                      fontSize: widget.h * 5 / 96,
-                                      fontFamily: "xd",
-                                      color: Colors.white,
-                                      shadows: const <Shadow>[
-                                        Shadow(
-                                          offset: Offset(3.0, 3.0),
-                                          blurRadius: 3.0,
-                                          color: Colors.black54,
-                                        ),
-                                        Shadow(
-                                          offset: Offset(3.0, 3.0),
-                                          blurRadius: 8.0,
-                                          color: Colors.black54,
-                                        ),
-                                      ],
-                                    ),
+                        ),
+                        Positioned(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(
+                                  top: widget.h * 1.2 / 96,
+                                ),
+                                child: Text(
+                                  "Telveli",
+                                  style: TextStyle(
+                                    fontFamily: "xd",
+                                    fontSize: widget.h * 5 / 96,
+                                    color: Colors.white,
+                                    shadows: const <Shadow>[
+                                      Shadow(
+                                        offset: Offset(3.0, 3.0),
+                                        blurRadius: 3.0,
+                                        color: Colors.black54,
+                                      ),
+                                      Shadow(
+                                        offset: Offset(3.0, 3.0),
+                                        blurRadius: 8.0,
+                                        color: Colors.black54,
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          )
-                        ],
-                      ),
+                              ),
+                            ],
+                          ),
+                        )
+                      ],
                     ),
                   ),
                   Container(
                     width: widget.w,
-                    height: widget.h - (widget.h * 4 / 48) - (widget.s),
+                    height: widget.h - (widget.s) - (widget.h * 4 / 48),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
                         Container(
                           margin: EdgeInsets.only(
-                              top: widget.h / 20, bottom: widget.h / 30),
+                              top: widget.h / 40, bottom: widget.h / 40),
                           child: Text(
                               style: TextStyle(
-                                fontSize: widget.h * 1.2 / 48,
+                                fontSize: widget.h * 1 / 48,
                                 color: Colors.white,
                                 shadows: <Shadow>[
                                   Shadow(
@@ -257,15 +234,24 @@ class _TurkBilgiScreenState extends State<TurkBilgiScreen> {
                         ),
                         loginField(
                             text: username,
-                            heigh: widget.h / 20,
+                            heigh: widget.h / 22,
                             func: (x) {
                               setState(() {
                                 username = x;
                               });
                             },
-                            width: widget.w * 6 / 10),
+                            width: widget.w * 7 / 10),
+                        loginField(
+                            text: cinsiyet,
+                            heigh: widget.h / 22,
+                            func: (x) {
+                              setState(() {
+                                cinsiyet = x;
+                              });
+                            },
+                            width: widget.w * 7 / 10),
                         Container(
-                          margin: EdgeInsets.only(bottom: widget.h / 20),
+                          margin: EdgeInsets.only(bottom: widget.h / 40),
                           decoration: BoxDecoration(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(20)),
@@ -276,8 +262,8 @@ class _TurkBilgiScreenState extends State<TurkBilgiScreen> {
                                   offset: Offset(3, 4), // Shadow position
                                 ),
                               ]),
-                          height: widget.h / 20,
-                          width: widget.w * 6 / 10,
+                          height: widget.h / 22,
+                          width: widget.w * 7 / 10,
                           child: TextButton(
                             style: ButtonStyle(
                               backgroundColor:
@@ -304,21 +290,44 @@ class _TurkBilgiScreenState extends State<TurkBilgiScreen> {
                             ]),
                           ),
                         ),
+                        loginField(
+                            text: calismaDurumu,
+                            heigh: widget.h / 20,
+                            func: (x) {
+                              setState(() {
+                                calismaDurumu = x;
+                              });
+                            },
+                            width: widget.w * 7 / 10),
+                        loginField(
+                            text: iliskiDurumu,
+                            heigh: widget.h / 22,
+                            func: (x) {
+                              setState(() {
+                                iliskiDurumu = x;
+                              });
+                            },
+                            width: widget.w * 7 / 10),
                         loginbutton(
                             func: () {
                               FocusManager.instance.primaryFocus?.unfocus();
                               if (userdate == "Doğum Tarihi") {
                                 userdate = "01/01/2000";
                               }
-                              Navigator.pushNamed(context, 'turkfal',
+                              Navigator.pushNamed(context, 'tarotbilgi',
                                   arguments: {
-                                    "authdocc": args["authdocc"],
-                                    "date": userdate,
-                                    "name": username
+                                    "authdocc": ref,
+                                    "tbilgi": {
+                                      "isim": username,
+                                      "cins": cinsiyet,
+                                      "tar": userdate,
+                                      "cal": calismaDurumu,
+                                      "ilis": iliskiDurumu,
+                                    },
                                   });
                             },
-                            marg: widget.h / 100,
-                            text: "Devam",
+                            marg: widget.h / 30,
+                            text: "Kaydet",
                             heigh: widget.h / 20,
                             width: widget.w / 2),
                         Container(
@@ -329,9 +338,9 @@ class _TurkBilgiScreenState extends State<TurkBilgiScreen> {
                                   height: _bannerAd!.size.height.toDouble(),
                                   child: AdWidget(ad: _bannerAd!))
                               : null,
-                          margin: EdgeInsets.only(top: widget.h / 25),
+                          margin: EdgeInsets.only(top: widget.h / 44),
                           width: widget.w,
-                          height: widget.h / 10,
+                          height: widget.h / 5,
                         ),
                         Spacer(),
                       ],
@@ -341,13 +350,6 @@ class _TurkBilgiScreenState extends State<TurkBilgiScreen> {
               ),
             ),
           ),
-          Positioned(
-              left: widget.h / 6,
-              top: widget.h - widget.h / 3,
-              child: Container(
-                height: widget.h / 2,
-                child: Lottie.asset("assets/cosi.json"),
-              )),
           Positioned(
               top: datetop,
               child: AnimatedContainer(
@@ -424,7 +426,7 @@ class loginbutton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: marg),
+      margin: EdgeInsets.only(bottom: marg, top: marg),
       decoration: BoxDecoration(
           borderRadius: BorderRadius.all(Radius.circular(20)),
           boxShadow: [
